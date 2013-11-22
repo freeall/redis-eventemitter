@@ -1,11 +1,14 @@
 {
   "name": "redis-eventemitter",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Redis pubsub using an event emitter",
   "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git@github.com:freeall/redis-eventemitter.git"
+  },
+  "scripts": {
+    "test": "node test.js"
   },
   "keywords": [
     "redis",

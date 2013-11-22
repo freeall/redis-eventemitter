@@ -21,6 +21,12 @@ pubsub.on('*:newuser', function(channel, message) {
 });
 ```
 
+### .on('error', function(err) { ... }) [error handling]
+
+To be able to handle errors (like when the redis server is down) `.on('error', ...)` should be used.
+
+Note that this means that you can't listen for messages on the `error` channel.
+
 ### .removeListener(pattern, listener)
 
 Removes listener.
