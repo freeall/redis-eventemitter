@@ -5,48 +5,66 @@ var hub = redis();
 var hubScope = redis({
 	scope: 'tests'
 });
+var hubNoScope = redis({
+	scope: false
+});
 
-var tests = 0;
+var testsMissing = 0;
+var expectCalls = function(count, f) {
+	testsMissing += count;
+	return function() {
+		console.log(arguments)
+		f.apply(null, arguments);
+		testsMissing--;
+		assert(count-- >= 0);
+	}
+};
+var expectCall = function(f) {
+	return expectCalls(1, f);
+};
 
-hub.on('test1', function(channel, msg) {
+hub.on('test1', expectCall(function(channel, msg) {
 	assert(msg === 'ok1');
-	tests++;
-});
-hub.on('*:test2', function(channel, msg) {
+}));
+hub.on('*:test2', expectCall(function(channel, msg) {
 	assert(msg === 'ok2');
-	tests++;
-});
-hub.on('test3:*', function(channel, msg) {
+}));
+hub.on('test3:*', expectCall(function(channel, msg) {
 	assert(msg === 'ok3');
-	tests++;
-});
-hub.once('test4', function() {
-	tests++;
-});
-hub.on('test5', function(channel, msg1, msg2) {
+}));
+hub.once('test4', expectCall(function() { }));
+hub.on('test5', expectCall(function(channel, msg1, msg2) {
 	assert(msg1 === 'ok5a');
 	assert(msg2 === 'ok5b');
-	tests++;
-});
-hub.on('test6', function(channel, json) {
+}));
+hub.on('test6', expectCall(function(channel, json) {
 	assert(json.msg === 'ok6');
-	tests++;
-});
-hub.on('test7', function(channel, msg) {
+}));
+hub.on('test7', expectCall(function(channel, msg) {
 	assert(channel === 'test7');
-	tests++;
-});
-hub.on('test8:*', function(channel, msg) {
+}));
+hub.on('test8:*', expectCall(function(channel, msg) {
 	assert(channel === 'test8:foo');
-	tests++;
-});
-hub.on('testscope', function(channel, msg) {
+}));
+hub.on('testscope', expectCall(function(channel, msg) {
 	assert(msg === 'testscope1');
-	tests++;
-});
-hubScope.on('testscope', function(channel, msg) {
+}));
+hubScope.on('testscope', expectCall(function(channel, msg) {
 	assert(msg === 'testscope2');
-	tests++;
+}));
+hubNoScope.on('test9:*', expectCall(function(channel, msg) {
+	assert(channel === 'test9:foo');
+	assert(msg === 'ok9');
+}));
+hub.on('test10same', expectCall(function() { }));
+hub.on('test10same', expectCall(function() { }));
+hubNoScope.on('*', expectCalls(14, function() { }));
+hub.on('anerror', expectCall(function() {
+	throw new Error('an error');
+}));
+
+process.once('uncaughtException', function(err) {
+	assert(err.message === 'an error');
 });
 
 setTimeout(function() {
@@ -62,12 +80,16 @@ setTimeout(function() {
 	hub.emit('test8:foo', 'ok8');
 	hub.emit('testscope', 'testscope1');
 	hubScope.emit('testscope', 'testscope2');
+	hubNoScope.emit('test9:foo', 'ok9');
+	hub.emit('test10same');
+	hub.emit('anerror');
 }, 500);
 
 setTimeout(function() {
-	assert(tests === 10);
+	assert(!testsMissing);
 	hub.close();
 	hubScope.close();
+	hubNoScope.close();
 }, 2000);
 
 setTimeout(function() {

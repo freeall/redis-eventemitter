@@ -7,7 +7,7 @@ module.exports = function(options) {
 	var host = options.host || '127.0.0.1';
 	var pub = redis.createClient(port, host, options);
 	var sub = redis.createClient(port, host, options);
-	var scope = (options.scope || '') + ':';
+	var scope = options.scope === false ? '' : (options.scope || '') + ':';
 	var that = new events.EventEmitter();
 	var emit = events.EventEmitter.prototype.emit;
 	var removeListener = events.EventEmitter.prototype.removeListener;
@@ -20,7 +20,12 @@ module.exports = function(options) {
 	pub.on('error', onerror);
 	sub.on('pmessage', function(pattern, channel, messages) {
 		pattern = pattern.slice(scope.length);
-		emit.apply(that, [pattern].concat(JSON.parse(messages)));
+		try {
+			emit.apply(that, [pattern].concat(JSON.parse(messages)));
+		}
+		catch(err) {
+			process.nextTick(emit.bind(that, 'error', err));
+		}
 	});
 
 	that.on('newListener', function(pattern, listener) {
