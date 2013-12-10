@@ -66,7 +66,7 @@ process.once('uncaughtException', function(err) {
 	assert(err.message === 'an error');
 });
 
-setTimeout(function() {
+hub.flush(function() {
 	hub.emit('test1', 'ok1');
 	hub.emit('foo:test2', 'ok2');
 	hub.emit('test3:foo', 'ok3');
@@ -82,7 +82,7 @@ setTimeout(function() {
 	hubNoScope.emit('test9:foo', 'ok9');
 	hub.emit('test10same');
 	hub.emit('anerror');
-}, 500);
+});
 
 setTimeout(function() {
 	assert(!testsMissing);
