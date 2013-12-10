@@ -2,9 +2,11 @@
 
 Use redis as pubsub using a simple eventemitter.
 
-Uses an optional `scope` property which can be used as a namespace.
+Uses an optional `scope` property which can be used as a namespace. If `scope` set to `false`, then you can listen to all events, e.g., `pubsub = redis({scope:false}); pubsub.on('production:*', ...)`
 
-If `scope` set to `false`, then you can listen to all events, e.g., `pubsub = redis({scope:false}); pubsub.on('production:*', ...)`
+	npm install redis-eventemitter
+	
+[![build status](https://secure.travis-ci.org/freeall/redis-eventemitter.png)](http://travis-ci.org/freeall/redis-eventemitter)
 
 ## Usage
 
