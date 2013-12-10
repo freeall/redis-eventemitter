@@ -13,7 +13,6 @@ var testsMissing = 0;
 var expectCalls = function(count, f) {
 	testsMissing += count;
 	return function() {
-		console.log(arguments)
 		f.apply(null, arguments);
 		testsMissing--;
 		assert(count-- >= 0);
