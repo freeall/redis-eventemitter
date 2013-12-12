@@ -1,94 +1,84 @@
 var redis = require('./index');
 var assert = require('assert');
 
-var hub = redis();
-var hubScope = redis({
-	scope: 'tests'
-});
-var hubNoScope = redis({
-	scope: false
-});
-
 var testsMissing = 0;
-var expectCalls = function(count, f) {
-	testsMissing += count;
+var expectCall = function(f) {
+	testsMissing++;
+
+	var count = 1;
 	return function() {
-		f.apply(null, arguments);
 		testsMissing--;
 		assert(count-- >= 0);
-	}
+		f.apply(null, arguments);
+	};
 };
-var expectCall = function(f) {
-	return expectCalls(1, f);
-};
+var hub = redis();
+var hubPrefix = redis({
+	prefix: 'foo:'
+});
 
-hub.on('test1', expectCall(function(channel, msg) {
-	assert(msg === 'ok1');
+
+/* Standard tests */
+hub.on('testSimple', expectCall(function(channel, msg) {
+	assert(channel == 'testSimple');
+	assert(msg === 'ok');
 }));
-hub.on('*:test2', expectCall(function(channel, msg) {
-	assert(msg === 'ok2');
+hub.on('*:testGlobBefore', expectCall(function(channel, msg) {
+	assert(channel === 'foo:testGlobBefore');
 }));
-hub.on('test3:*', expectCall(function(channel, msg) {
-	assert(msg === 'ok3');
+hub.on('testGlobAfter:*', expectCall(function(channel, msg) {
+	assert(channel === 'testGlobAfter:foo');
 }));
-hub.once('test4', expectCall(function() { }));
-hub.on('test5', expectCall(function(channel, msg1, msg2) {
-	assert(msg1 === 'ok5a');
-	assert(msg2 === 'ok5b');
+hub.once('testOnce', expectCall(function() { }));
+hub.on('testSeveralArgs', expectCall(function(channel, msg1, msg2) {
+	assert(msg1 === 'okA');
+	assert(msg2 === 'okB');
 }));
-hub.on('test6', expectCall(function(channel, json) {
-	assert(json.msg === 'ok6');
+hub.on('testJson', expectCall(function(channel, json) {
+	assert(json.msg === 'ok');
 }));
-hub.on('test7', expectCall(function(channel, msg) {
-	assert(channel === 'test7');
+hub.on('testTwoListeners', expectCall(function() { }));
+hub.on('testTwoListeners', expectCall(function() { }));
+
+
+/* Test prefix */
+hub.on('*testPrefixed', expectCall(function(channel, msg) {
+	assert(channel === 'foo:testPrefixed');
 }));
-hub.on('test8:*', expectCall(function(channel, msg) {
-	assert(channel === 'test8:foo');
+hubPrefix.on('testPrefixed', expectCall(function(channel, msg) {
+	assert(channel === 'testPrefixed');
 }));
-hub.on('testscope', expectCall(function(channel, msg) {
-	assert(msg === 'testscope1');
-}));
-hubScope.on('testscope', expectCall(function(channel, msg) {
-	assert(msg === 'testscope2');
-}));
-hubNoScope.on('test9:*', expectCall(function(channel, msg) {
-	assert(channel === 'test9:foo');
-	assert(msg === 'ok9');
-}));
-hub.on('test10same', expectCall(function() { }));
-hub.on('test10same', expectCall(function() { }));
-hubNoScope.on('*', expectCalls(14, function() { }));
+
+
+/* Test error handling */
 hub.on('anerror', expectCall(function() {
 	throw new Error('an error');
 }));
-
 process.once('uncaughtException', function(err) {
+	if (err.message !== 'an error') return console.log(err.message, err.stack);
 	assert(err.message === 'an error');
 });
 
+
 hub.flush(function() {
-	hub.emit('test1', 'ok1');
-	hub.emit('foo:test2', 'ok2');
-	hub.emit('test3:foo', 'ok3');
-	hub.emit('test4', 'ok4');
-	hub.emit('test4', 'ok4');
-	hub.emit('test4', 'ok4');
-	hub.emit('test5', 'ok5a', 'ok5b')
-	hub.emit('test6', {msg:'ok6'});
-	hub.emit('test7', 'ok7');
-	hub.emit('test8:foo', 'ok8');
-	hub.emit('testscope', 'testscope1');
-	hubScope.emit('testscope', 'testscope2');
-	hubNoScope.emit('test9:foo', 'ok9');
-	hub.emit('test10same');
+	hub.emit('testSimple', 'ok');
+	hub.emit('foo:testGlobBefore', 'ok');
+	hub.emit('testGlobAfter:foo', 'ok');
+	hub.emit('testOnce', 'ok');
+	hub.emit('testOnce', 'ok');
+	hub.emit('testSeveralArgs', 'okA', 'okB')
+	hub.emit('testJson', {msg:'ok'});
+	hub.emit('testTwoListeners');
+
+	hubPrefix.emit('testPrefixed', 'ok');
+
 	hub.emit('anerror');
 });
 
 setTimeout(function() {
 	assert(!testsMissing);
 	hub.close();
-	hubScope.close();
-	hubNoScope.close();
+	hubPrefix.close();
 }, 2000);
 
 setTimeout(function() {

@@ -7,7 +7,7 @@ module.exports = function(options) {
 	var host = options.host || '127.0.0.1';
 	var pub = redis.createClient(port, host, options);
 	var sub = redis.createClient(port, host, options);
-	var scope = options.scope === false ? '' : (options.scope || '') + ':';
+	var prefix = options.prefix || '';
 	var that = new events.EventEmitter();
 	var emit = events.EventEmitter.prototype.emit;
 	var removeListener = events.EventEmitter.prototype.removeListener;
@@ -30,9 +30,10 @@ module.exports = function(options) {
 	sub.on('error', onerror);
 	pub.on('error', onerror);
 	sub.on('pmessage', function(pattern, channel, messages) {
-		pattern = pattern.slice(scope.length);
+		pattern = pattern.slice(prefix.length);
+		channel = channel.slice(prefix.length);
 		try {
-			emit.apply(that, [pattern].concat(JSON.parse(messages)));
+			emit.apply(that, [pattern, channel].concat(JSON.parse(messages)));
 		}
 		catch(err) {
 			process.nextTick(emit.bind(that, 'error', err));
@@ -42,22 +43,22 @@ module.exports = function(options) {
 	that.on('newListener', function(pattern, listener) {
 		if (pattern === 'error') return;
 
-		pattern = scope + pattern;
+		pattern = prefix + pattern;
 		if (that.listeners(pattern).length) return;
 		sub.psubscribe(pattern, callback());
 	});
 	that.emit = function(channel, messages) {
 		if (channel in {newListener:1, error:1}) return emit.apply(this, arguments);
 
-		messages = Array.prototype.slice.call(arguments);
-		pub.publish(scope + channel, JSON.stringify(messages), callback());
+		messages = Array.prototype.slice.call(arguments, 1);
+		pub.publish(prefix + channel, JSON.stringify(messages), callback());
 	};
 	that.removeListener = function(pattern, listener) {
 		if (pattern in {newListener:1, error:1}) return removeListener.apply(that, arguments);
 
 		removeListener.apply(that, arguments);
 		if (that.listeners(pattern).length) return that;
-		sub.punsubscribe(scope+pattern, callback());
+		sub.punsubscribe(prefix+pattern, callback());
 		return that;
 	};
 	that.removeAllListeners = function(pattern) {

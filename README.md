@@ -1,22 +1,27 @@
-# redis-eventemitter
+# redis-eventemitter [![build status](https://secure.travis-ci.org/freeall/redis-eventemitter.png)](http://travis-ci.org/freeall/redis-eventemitter)
 
 Use redis as pubsub using a simple eventemitter.
 
-Uses an optional `scope` property which can be used as a namespace. If `scope` set to `false`, then you can listen to all events, e.g., `pubsub = redis({scope:false}); pubsub.on('production:*', ...)`
-
 	npm install redis-eventemitter
-	
-[![build status](https://secure.travis-ci.org/freeall/redis-eventemitter.png)](http://travis-ci.org/freeall/redis-eventemitter)
 
 ## Usage
 
 ```js
 var redis = require('redis-eventemitter');
 
-var pubsub = redis({port:6379, host:'localhost', scope:'production'});
-pubsub.on('*:newuser', function(channel, user) {
-	console.log('New user', user);
+var pubsub = redis({
+	port: 6379,
+	host: '127.0.0.1',
+	prefix: 'production:'
 });
+
+// Listen for messages on the *:newuser channel
+pubsub.on('*:newuser', function(channel, user) {
+	console.log(channel); // prints "myservice:newuser"
+	console.log(user);    // user is a json map as expected
+});
+
+// Publish an event "production:myservice:newuser" to the redis pubsub
 pubsub.emit('myservice:newuser', { id:'a1b2c3', email:'foo@example.com' });
 ```
 
@@ -26,8 +31,8 @@ pubsub.emit('myservice:newuser', { id:'a1b2c3', email:'foo@example.com' });
 
 ``` js
 var redis = require('redis-eventemitter');
+var pubsub = redis({ prefix: 'production:' });
 
-var pubsub = redis({port:6379, host:'localhost', scope:'production'});
 pubsub.emit('myservice:newuser', { id:'a1b2c3' });
 ```
 
@@ -35,8 +40,8 @@ pubsub.emit('myservice:newuser', { id:'a1b2c3' });
 
 ``` js
 var redis = require('redis-eventemitter');
+var pubsub = redis({ scope:'production:' });
 
-var pubsub = redis({port:6379, host:'localhost', scope:'production'});
 pubsub.on('*:newuser', function(channel, message) {
 	console.log(channel); // myservice:newuser
 	console.log(message); // { id:'a1b2c3' }
@@ -56,3 +61,19 @@ Removes listener.
 ### .removeAllListeners(pattern)
 
 Removes all listeners.
+
+## Options
+
+### port
+
+Port for the redis server. Defaults to 6379.
+
+### host
+
+Host for the redis server. Defaults to 127.0.0.1.
+
+### prefix
+
+A prefix that is added to the channel name, when publishing events to the redis pubsub. Useful for separating services or environments, e.g. `production`, `development`, and `staging`.
+
+It is also removed when the listeners is invoked.
