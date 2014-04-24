@@ -6,7 +6,7 @@ module.exports = function(options) {
 	var port = options.port || 6379;
 	var host = options.host || '127.0.0.1';
 	var pub = redis.createClient(port, host, options);
-	var sub = redis.createClient(port, host, options);
+	var sub = redis.createClient(port, host, options);		
 	var prefix = options.prefix || '';
 	var that = new events.EventEmitter();
 	var emit = events.EventEmitter.prototype.emit;
@@ -27,6 +27,12 @@ module.exports = function(options) {
 		if (!that.listeners('error').length) return;
 		emit.apply(that, Array.prototype.concat.apply(['error'], arguments));
 	};
+
+	if (options.auth) {
+		pub.auth(options.auth);
+		sub.auth(options.auth);
+	}
+
 	sub.on('error', onerror);
 	pub.on('error', onerror);
 	sub.on('pmessage', function(pattern, channel, messages) {
