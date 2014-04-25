@@ -12,7 +12,8 @@ var redis = require('redis-eventemitter');
 var pubsub = redis({
 	port: 6379,
 	host: '127.0.0.1',
-	prefix: 'production:'
+	prefix: 'production:',
+	auth_pass: 'mypassword'
 });
 
 // Listen for messages on the *:newuser channel
