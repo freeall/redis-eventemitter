@@ -72,6 +72,10 @@ Port for the redis server. Defaults to 6379.
 
 Host for the redis server. Defaults to 127.0.0.1.
 
+### auth_pass
+
+Password for the redis server. Defaults to not being set.
+
 ### prefix
 
 A prefix that is added to the channel name, when publishing events to the redis pubsub. Useful for separating services or environments, e.g. `production`, `development`, and `staging`.
