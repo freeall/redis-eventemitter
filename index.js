@@ -3,6 +3,9 @@ var events = require('events');
 
 module.exports = function(options) {
 	options = options || {};
+
+	if (options.auth) options.auth_pass;
+
 	var port = options.port || 6379;
 	var host = options.host || '127.0.0.1';
 	var pub = redis.createClient(port, host, options);
