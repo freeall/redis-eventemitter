@@ -4,7 +4,7 @@ var events = require('events');
 module.exports = function(options) {
 	options = options || {};
 
-	if (options.auth) options.auth_pass;
+	if (options.auth) options.auth_pass = options.auth;
 
 	var port = options.port || 6379;
 	var host = options.host || '127.0.0.1';
