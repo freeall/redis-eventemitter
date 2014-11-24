@@ -1,6 +1,6 @@
 {
   "name": "redis-eventemitter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Redis pubsub using an event emitter",
   "main": "index.js",
   "repository": {
