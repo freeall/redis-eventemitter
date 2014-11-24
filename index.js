@@ -63,8 +63,21 @@ module.exports = function(options) {
 	that.emit = function(channel, messages) {
 		if (channel in {newListener:1, error:1}) return emit.apply(this, arguments);
 
+		var cb;
 		messages = Array.prototype.slice.call(arguments, 1);
-		pub.publish(prefix + channel, JSON.stringify(messages), callback());
+		if (typeof messages[messages.length - 1] === 'function') {
+			var onflush = callback();
+			var realCb = messages.pop();
+			cb = function() {
+				realCb.apply(null, arguments);
+				onflush();
+			}
+		}
+		else {
+			cb = callback();
+		}
+
+		pub.publish(prefix + channel, JSON.stringify(messages), cb);
 	};
 	that.removeListener = function(pattern, listener) {
 		if (pattern in {newListener:1, error:1}) return removeListener.apply(that, arguments);
