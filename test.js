@@ -49,6 +49,15 @@ hubPrefix.on('testPrefixed', expectCall(function(channel, msg) {
 	assert(channel === 'testPrefixed');
 }));
 
+/* Test callback */
+hub.on('testCallbackNoArgs', expectCall(function(channel, msg) {
+	assert(channel === 'testCallbackNoArgs');
+	assert(!msg);
+}));
+hub.on('testCallbackAndArgs', expectCall(function(channel, msg) {
+	assert(channel === 'testCallbackAndArgs');
+	assert(msg === 'testArg');
+}));
 
 /* Test error handling */
 hub.on('anerror', expectCall(function() {
@@ -73,6 +82,19 @@ hub.flush(function() {
 	hubPrefix.emit('testPrefixed', 'ok');
 
 	hub.emit('anerror');
+
+	hub.emit('testCallbackNoArgs', expectCall(function(err, num) {
+		assert(!err);
+		assert(num === 1);
+	}));
+	hub.emit('testCallbackAndArgs', 'testArg', expectCall(function(err, num) {
+		assert(!err);
+		assert(num === 1);
+	}));
+	hub.emit('testCallbackNoSub', expectCall(function(err, num) {
+		assert(!err);
+		assert(num === 0);
+	}));
 });
 
 setTimeout(function() {
