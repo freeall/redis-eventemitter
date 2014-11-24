@@ -14,6 +14,10 @@ var pubsub = redis({
 	host: '127.0.0.1',
 	prefix: 'production:',
 	auth_pass: 'mypassword'
+	// in case you want to control Redis clients
+	// creation you can specify pub/sub clients pair:
+	// pub: pubClient,
+	// sub: subClient
 });
 
 // Listen for messages on the *:newuser channel
@@ -82,3 +86,11 @@ Password for the redis server. Defaults to not being set.
 A prefix that is added to the channel name, when publishing events to the redis pubsub. Useful for separating services or environments, e.g. `production`, `development`, and `staging`.
 
 It is also removed when the listeners is invoked.
+
+### pub
+
+Redis client instance used for `publish`.
+
+### sub
+
+Redis client instance used for `subscribe`.
