@@ -71,7 +71,9 @@ module.exports = function(options) {
 		return that;
 	};
 	that.close = function() {
+		pub.quit();
 		pub.unref();
+		sub.quit();
 		sub.unref();
 	};
 	that.flush = function(fn) {
