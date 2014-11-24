@@ -4,14 +4,10 @@ var events = require('events');
 module.exports = function(options) {
 	options = options || {};
 
-	var pub;
-	var sub;
+	var pub = options.pub;
+	var sub = options.sub;
 
-	if (options.pub && options.sub) {
-		pub = options.pub;
-		sub = options.sub;
-	}
-	else {
+	if (!options.pub) {
 		if (options.auth) options.auth_pass = options.auth;
 
 		var port = options.port || 6379;
@@ -63,7 +59,7 @@ module.exports = function(options) {
 	that.emit = function(channel, messages) {
 		if (channel in {newListener:1, error:1}) return emit.apply(this, arguments);
 
-		var cb;
+		var cb = callback();
 		messages = Array.prototype.slice.call(arguments, 1);
 		if (typeof messages[messages.length - 1] === 'function') {
 			var onflush = callback();
@@ -72,9 +68,6 @@ module.exports = function(options) {
 				realCb.apply(null, arguments);
 				onflush();
 			}
-		}
-		else {
-			cb = callback();
 		}
 
 		pub.publish(prefix + channel, JSON.stringify(messages), cb);
