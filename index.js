@@ -4,12 +4,22 @@ var events = require('events');
 module.exports = function(options) {
 	options = options || {};
 
-	if (options.auth) options.auth_pass = options.auth;
+	var pub;
+	var sub;
 
-	var port = options.port || 6379;
-	var host = options.host || '127.0.0.1';
-	var pub = redis.createClient(port, host, options);
-	var sub = redis.createClient(port, host, options);
+	if (options.pub && options.sub) {
+		pub = options.pub;
+		sub = options.sub;
+	}
+	else {
+		if (options.auth) options.auth_pass = options.auth;
+
+		var port = options.port || 6379;
+		var host = options.host || '127.0.0.1';
+		pub = redis.createClient(port, host, options);
+		sub = redis.createClient(port, host, options);
+	}
+
 	var prefix = options.prefix || '';
 	var that = new events.EventEmitter();
 	var emit = events.EventEmitter.prototype.emit;
