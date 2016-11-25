@@ -10,10 +10,12 @@ Use redis as pubsub using a simple eventemitter.
 var redis = require('redis-eventemitter');
 
 var pubsub = redis({
-	port: 6379,
-	host: '127.0.0.1',
 	prefix: 'production:',
-	auth_pass: 'mypassword'
+	url: 'redis://myuser:mypass@localhost:6379/'
+	// port: 6379,
+	// host: '127.0.0.1',
+	// auth_pass: 'mypassword'
+
 	// in case you want to control Redis clients
 	// creation you can specify pub/sub clients pair:
 	// pub: pubClient,
@@ -36,7 +38,7 @@ pubsub.emit('myservice:newuser', { id:'a1b2c3', email:'foo@example.com' });
 
 ``` js
 var redis = require('redis-eventemitter');
-var pubsub = redis({ prefix: 'production:' });
+var pubsub = redis({ prefix: 'production:', host: 'localhost', port: 6379 });
 
 pubsub.emit('myservice:newuser', { id:'a1b2c3' });
 ```
@@ -45,7 +47,7 @@ pubsub.emit('myservice:newuser', { id:'a1b2c3' });
 
 ``` js
 var redis = require('redis-eventemitter');
-var pubsub = redis({ scope:'production:' });
+var pubsub = redis({ scope: 'production:', host: 'localhost', port: 6379 });
 
 pubsub.on('*:newuser', function(channel, message) {
 	console.log(channel); // myservice:newuser
@@ -71,11 +73,15 @@ Removes all listeners.
 
 ### port
 
-Port for the redis server. Defaults to 6379.
+Port for the redis server.
 
 ### host
 
-Host for the redis server. Defaults to 127.0.0.1.
+Host for the redis server.
+
+### url
+
+Url for the redis server.
 
 ### auth_pass
 

@@ -26,6 +26,6 @@
   ],
   "author": "freeall",
   "dependencies": {
-    "redis": "~0.9.0"
+    "redis": "~1.0.0"
   }
 }

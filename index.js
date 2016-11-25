@@ -4,16 +4,18 @@ var events = require('events');
 module.exports = function(options) {
 	options = options || {};
 
+	if (!(options.port && options.host) && !options.url) {
+		throw new Error('redis-eventemitter needs a url or port+host');
+	}
+
 	var pub = options.pub;
 	var sub = options.sub;
 
 	if (!options.pub) {
 		if (options.auth) options.auth_pass = options.auth;
 
-		var port = options.port || 6379;
-		var host = options.host || '127.0.0.1';
-		pub = redis.createClient(port, host, options);
-		sub = redis.createClient(port, host, options);
+		pub = redis.createClient(options);
+		sub = redis.createClient(options);
 	}
 
 	var prefix = options.prefix || '';
