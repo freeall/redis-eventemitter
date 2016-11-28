@@ -99,6 +99,8 @@ module.exports = function(options) {
 		if (!pending) return process.nextTick(fn);
 		queue.push(fn);
 	};
+	that.pub = pub;
+	that.sub = sub;
 
 	return that;
 };
